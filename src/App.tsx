@@ -7,12 +7,34 @@ import {
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
-import firebaseConfig from '../firebase-applet-config.json';
 import { MOCK_SHOW, transformShow } from './transform';
 import { Transcript } from './components/Transcript';
 import { saveUserShow, getUserShows, deleteUserShow } from './db';
 import { RadioShow } from './types';
 
+const getFirebaseConfig = () => {
+  try {
+    if (import.meta.env.VITE_FIREBASE_CONFIG) {
+      return JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG);
+    }
+  } catch (e) {
+    console.error("Failed to parse Firebase config from env", e);
+  }
+  return {
+    projectId: "",
+    appId: "",
+    apiKey: "",
+    authDomain: "",
+    firestoreDatabaseId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    measurementId: "",
+    oAuthClientId: "",
+    recaptchaSiteKey: ""
+  };
+};
+
+const firebaseConfig = getFirebaseConfig();
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 
@@ -48,7 +70,6 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Load library from local DB
   useEffect(() => {
     getUserShows().then((shows) => {
       if (shows && shows.length > 0) {
@@ -57,7 +78,6 @@ export default function App() {
     });
   }, []);
 
-  // Firebase auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -115,7 +135,6 @@ export default function App() {
     <div className="relative min-h-screen w-full bg-[#0a0a0c] text-white flex flex-col font-sans overflow-x-hidden selection:bg-io-blue/30 selection:text-white">
       <RainbowBackground />
 
-      {/* Audio Engine */}
       <audio
         ref={audioRef}
         src={selectedShow.audioUrl}
@@ -123,7 +142,6 @@ export default function App() {
         onEnded={() => setIsPlaying(false)}
       />
 
-      {/* Navigation Header */}
       <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/10 backdrop-blur-md bg-black/20">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('home')}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-io-blue via-io-green to-io-yellow flex items-center justify-center p-[2px]">
@@ -164,11 +182,9 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area */}
       <main className="relative z-10 flex-1 flex flex-col max-w-6xl w-full mx-auto p-6 md:p-8">
         {view === 'home' && (
           <div className="flex flex-col gap-10">
-            {/* Prompt Generator Hero */}
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-xl">
               <h2 className="text-2xl font-bold mb-2">Create a New Radio Show</h2>
               <p className="text-sm text-neutral-400 mb-6">
@@ -206,7 +222,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Show Library */}
             <div>
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <List className="w-5 h-5 text-io-blue" />
@@ -271,7 +286,6 @@ export default function App() {
             </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-220px)]">
-              {/* Left Column: Player & Metadata */}
               <div className="lg:col-span-5 flex flex-col gap-6">
                 <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
                   <img
@@ -289,7 +303,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Controls */}
                 <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 flex flex-col gap-3">
                   <input
                     type="range"
@@ -319,7 +332,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Right Column: Synchronized Interactive Transcript */}
               <div className="lg:col-span-7 bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden flex flex-col">
                 <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
                   <h3 className="text-sm font-semibold flex items-center gap-2">
